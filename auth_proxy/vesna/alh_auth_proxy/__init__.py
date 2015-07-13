@@ -1,4 +1,5 @@
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+import logging
 import os
 import struct
 from SocketServer import TCPServer
@@ -8,6 +9,8 @@ import urlparse
 from vesna.alh import ALHException
 
 SO_PEERCRED = 17
+
+log = logging.getLogger(__name__)
 
 class NullAuthenticator(object):
 	def is_allowed(self, pid, uid, gid):
@@ -32,6 +35,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 
 	def send_err(self, code, msg=''):
 		self.send_response(code)
+		self.send_header("Content-type", "text/plain")
 		self.end_headers()
 		self.wfile.write("%s\r\n" % (msg,))
 
@@ -101,18 +105,16 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 		self.end_headers()
 		self.wfile.write(resp)
 
-	def is_authorized(self, cluster):
+	def is_authorized(self, cluster_uid):
 		creds = self.request.getsockopt(SOL_SOCKET, SO_PEERCRED, struct.calcsize('3i'))
 		pid, uid, gid = struct.unpack('3i', creds)
 
-		#print 'pid: %d, uid: %d, gid %d' % (pid, uid, gid)
+		log.info('pid: %d, uid: %d, gid %d' % (pid, uid, gid))
 
 		return self.server.proxy.auth.is_allowed(pid, uid, gid)
 
 	def log_message(self, format, *args):
-		sys.stderr.write("- - - [%s] %s\n" %
-                         (self.log_date_time_string(),
-                          format%args))
+		log.info(format % args)
 
 class ALHAuthProxy(object):
 	def __init__(self, path, auth=None, clusters={}):

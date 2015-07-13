@@ -1,4 +1,5 @@
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+import logging
 import requests_unixsocket
 import threading
 import unittest
@@ -6,6 +7,8 @@ import os
 
 from vesna.alh_auth_proxy import ALHAuthProxy
 from vesna.alh import ALHWeb
+
+logging.basicConfig(level=logging.WARNING)
 
 class MockALH:
 	def __init__(self):
@@ -139,6 +142,9 @@ class TestAuthProxyALHWeb(unittest.TestCase):
 				self.wfile.write('bar')
 
 				l[0] += 1
+
+			def log_message(self, format, *args):
+				pass
 
 		server_address = ('localhost', 12345)
 		self.httpd = HTTPServer(server_address, MockHTTPRequestHandler)
