@@ -5,6 +5,7 @@ from SocketServer import TCPServer
 from socket import AF_UNIX, SOL_SOCKET
 import sys
 import urlparse
+from vesna.alh import ALHException
 
 SO_PEERCRED = 17
 
@@ -27,24 +28,86 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 		if parsed_path.path == '/communicator':
 			self.do_communicator(parsed_path)
 		else:
-			self.send_response(404)
-			self.end_headers()
-			self.wfile.write("Not found")
+			self.send_error(404, 'path not found')
+
+	def send_err(self, code, msg=''):
+		self.send_response(code)
+		self.end_headers()
+		self.wfile.write("%s\r\n" % (msg,))
 
 	def do_communicator(self, parsed_path):
-		creds = self.request.getsockopt(SOL_SOCKET, SO_PEERCRED, struct.calcsize('3i'))
-		pid, uid, gid = struct.unpack('3i',creds)
+		query = urlparse.parse_qs(parsed_path.query)
 
-		#print 'pid: %d, uid: %d, gid %d' % (pid, uid, gid)
+		cluster_uid = query.get('cluster_uid')
+		if cluster_uid is None:
+			self.send_error(400, 'cluster uid missing')
+			return
 
-		if not self.server.proxy.auth.is_allowed(pid, uid, gid):
-			self.send_response(403)
-			self.end_headers()
+		alh = self.server.proxy.clusters.get(cluster_uid[0])
+
+		if alh is None:
+			self.send_error(404, 'cluster uid not found')
+			return
+
+		if not self.is_authorized(cluster_uid):
+			self.send_error(403, 'not authorized')
+			return
+
+		self.do_alh_request(query, alh)
+
+	def _split_resource_args(self, resource):
+
+		f = resource.split('?', 1)
+		if len(f) == 1:
+			return f[0], ""
+		else:
+			return f[0], f[1]
+
+	def do_alh_request(self, query, alh):
+
+		method = query.get('method')
+		if method is None:
+			self.send_error(400, 'alh method missing')
+			return
+		method = method[0].lower()
+
+		resource = query.get('resource')
+		if resource is None:
+			self.send_error(400, 'alh resource missing')
+			return
+		resource, args = self._split_resource_args(resource[0])
+
+		if method == 'get':
+			try:
+				resp = alh.get(resource, args)
+			except ALHException, e:
+				resp = str(e)
+		elif method == 'post':
+			content = query.get('content')
+			if content is None:
+				self.send_error(400, 'alh content missing')
+				return
+			data = content[0]
+			try:
+				resp = alh.post(resource, data, args)
+			except ALHException, e:
+				resp = str(e)
+		else:
+			self.send_error(400, "invalid alh method")
 			return
 
 		self.send_response(200)
+		self.send_header("Content-type", "text/plain")
 		self.end_headers()
-		self.wfile.write("Hello, world!")
+		self.wfile.write(resp)
+
+	def is_authorized(self, cluster):
+		creds = self.request.getsockopt(SOL_SOCKET, SO_PEERCRED, struct.calcsize('3i'))
+		pid, uid, gid = struct.unpack('3i', creds)
+
+		#print 'pid: %d, uid: %d, gid %d' % (pid, uid, gid)
+
+		return self.server.proxy.auth.is_allowed(pid, uid, gid)
 
 	def log_message(self, format, *args):
 		sys.stderr.write("- - - [%s] %s\n" %
@@ -54,6 +117,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 class ALHAuthProxy(object):
 	def __init__(self, path, auth=None, clusters={}):
 		self.path = path
+		self.clusters = clusters
 
 		if auth is None:
 			self.auth = NullAuthenticator()

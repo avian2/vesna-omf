@@ -1,2 +1,1 @@
-class ALHAuthProxy(object):
-	pass
+__import__('pkg_resources').declare_namespace(__name__)
