@@ -42,6 +42,9 @@ class TestAuthProxyMockedALH(unittest.TestCase):
 		self.t = threading.Thread(target=self.a.start)
 		self.t.start()
 
+		while not os.path.exists(self.path):
+			pass
+
 	def _get(self, path, params=None):
 		session = requests_unixsocket.Session()
 		return session.get('http+unix://%s/%s' % (self.path.replace('/', '%2F'), path), params=params)
@@ -115,8 +118,8 @@ class TestAuthProxyMockedALH(unittest.TestCase):
 		l = []
 
 		class MockAuthenticator:
-			def is_allowed(self, pid, uid, gid):
-				l.append((pid, uid, gid))
+			def is_allowed(self, cluster_uid, pid, uid, gid):
+				l.append((cluster_uid, pid, uid, gid))
 				return False
 
 		self._start(auth=MockAuthenticator())
@@ -124,7 +127,7 @@ class TestAuthProxyMockedALH(unittest.TestCase):
 		r = self._get('communicator', {'cluster_uid': 'test', 'method': 'get', 'resource':'/test'})
 		self.assertEqual(r.status_code, 403)
 		self.assertEqual(self.alh.requests, [])
-		self.assertEqual(l[0], (os.getpid(), os.getuid(), os.getgid()))
+		self.assertEqual(l[0], ('test', os.getpid(), os.getuid(), os.getgid()))
 
 class TestAuthProxyALHWeb(unittest.TestCase):
 
@@ -166,6 +169,9 @@ class TestAuthProxyALHWeb(unittest.TestCase):
 		self.a = ALHAuthProxy(self.path, clusters=clusters, **kwargs)
 		self.t2 = threading.Thread(target=self.a.start)
 		self.t2.start()
+
+		while not os.path.exists(self.path):
+			pass
 
 	def _get(self, path, params=None):
 		session = requests_unixsocket.Session()

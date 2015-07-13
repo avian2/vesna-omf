@@ -13,7 +13,7 @@ SO_PEERCRED = 17
 log = logging.getLogger(__name__)
 
 class NullAuthenticator(object):
-	def is_allowed(self, pid, uid, gid):
+	def is_allowed(self, cluster_uid, pid, uid, gid):
 		return True
 
 class UnixSocketHTTPServer(TCPServer):
@@ -46,8 +46,9 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 		if cluster_uid is None:
 			self.send_error(400, 'cluster uid missing')
 			return
+		cluster_uid = cluster_uid[0]
 
-		alh = self.server.proxy.clusters.get(cluster_uid[0])
+		alh = self.server.proxy.clusters.get(cluster_uid)
 
 		if alh is None:
 			self.send_error(404, 'cluster uid not found')
@@ -111,7 +112,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 
 		log.info('pid: %d, uid: %d, gid %d' % (pid, uid, gid))
 
-		return self.server.proxy.auth.is_allowed(pid, uid, gid)
+		return self.server.proxy.auth.is_allowed(cluster_uid, pid, uid, gid)
 
 	def log_message(self, format, *args):
 		log.info(format % args)
