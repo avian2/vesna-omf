@@ -4,6 +4,7 @@ import struct
 from SocketServer import TCPServer
 from socket import AF_UNIX, SOL_SOCKET
 import sys
+import urlparse
 
 SO_PEERCRED = 17
 
@@ -21,6 +22,16 @@ class UnixSocketHTTPServer(TCPServer):
 
 class HTTPRequestHandler(BaseHTTPRequestHandler):
 	def do_GET(self):
+		parsed_path = urlparse.urlparse(self.path)
+
+		if parsed_path.path == '/communicator':
+			self.do_communicator(parsed_path)
+		else:
+			self.send_response(404)
+			self.end_headers()
+			self.wfile.write("Not found")
+
+	def do_communicator(self, parsed_path):
 		creds = self.request.getsockopt(SOL_SOCKET, SO_PEERCRED, struct.calcsize('3i'))
 		pid, uid, gid = struct.unpack('3i',creds)
 
@@ -41,7 +52,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                           format%args))
 
 class ALHAuthProxy(object):
-	def __init__(self, path, auth=None):
+	def __init__(self, path, auth=None, clusters={}):
 		self.path = path
 
 		if auth is None:

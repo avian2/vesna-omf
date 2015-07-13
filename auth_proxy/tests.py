@@ -1,3 +1,4 @@
+from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 import requests_unixsocket
 import threading
 import unittest
@@ -9,10 +10,12 @@ class TestAuthProxy(unittest.TestCase):
 
 	def setUp(self):
 		self.path = "/tmp/alh.sock"
+		self.a = None
 
 	def tearDown(self):
-		self.a.stop()
-		self.t.join()
+		if self.a is not None:
+			self.a.stop()
+			self.t.join()
 
 	def _start(self, **kwargs):
 		self.a = ALHAuthProxy(self.path, **kwargs)
@@ -23,10 +26,16 @@ class TestAuthProxy(unittest.TestCase):
 		session = requests_unixsocket.Session()
 		return session.get('http+unix://%s/%s' % (self.path.replace('/', '%2F'), path))
 
-	def test_init(self):
+	def test_invalid(self):
 		self._start()
 
 		r = self._get('foo')
+		self.assertEqual(r.status_code, 404)
+
+	def test_get(self):
+		self._start()
+
+		r = self._get('communicator')
 		self.assertEqual(r.status_code, 200)
 		self.assertEqual(r.text, 'Hello, world!')
 
@@ -40,7 +49,7 @@ class TestAuthProxy(unittest.TestCase):
 				return False
 
 		self._start(auth=MockAuthenticator())
-		r = self._get('foo')
+		r = self._get('communicator')
 		self.assertEqual(r.status_code, 403)
 		self.assertEqual(l[0], (os.getpid(), os.getuid(), os.getgid()))
 
