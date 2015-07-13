@@ -1,0 +1,2 @@
+class ALHAuthProxy(object):
+	pass
