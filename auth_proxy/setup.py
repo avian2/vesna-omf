@@ -14,7 +14,11 @@ setup(name='vesna-alhauthproxy',
 
       namespace_packages = [ 'vesna' ],
 
-      provides = [ 'vesna.alh', 'vesna.cdf' ],
+      entry_points = {
+	      'console_scripts': [
+		      'alh_auth_proxy=vesna.alh_auth_proxy:main',
+	      ]
+      },
 
       test_suite = 'tests',
 )
