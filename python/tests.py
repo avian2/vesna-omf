@@ -5,7 +5,7 @@ import threading
 import unittest
 import os
 
-from vesna.alh_auth_proxy import ALHAuthProxy
+from vesna.omf.proxy import ALHAuthProxy
 from vesna.alh import ALHWeb
 
 logging.basicConfig(level=logging.WARNING)

@@ -10,13 +10,13 @@ setup(name='vesna-alhauthproxy',
       author='Tomaz Solc',
       author_email='tomaz.solc@ijs.si',
 
-      packages = [ 'vesna', 'vesna.alh_auth_proxy' ],
+      packages = [ 'vesna', 'vesna.omf' ],
 
       namespace_packages = [ 'vesna' ],
 
       entry_points = {
 	      'console_scripts': [
-		      'alh_auth_proxy=vesna.alh_auth_proxy:main',
+		      'vesna_alh_auth_proxy=vesna.omf.proxy:main',
 	      ]
       },
 
