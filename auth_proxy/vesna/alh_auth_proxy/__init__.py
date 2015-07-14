@@ -1,12 +1,17 @@
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+import daemon
+from daemon.pidlockfile import PIDLockFile
 import logging
+import optparse
 import os
+import signal
 import struct
 from SocketServer import TCPServer
 from socket import AF_UNIX, SOL_SOCKET
 import sys
+import threading
 import urlparse
-from vesna.alh import ALHException
+from vesna.alh import ALHException, ALHWeb
 
 SO_PEERCRED = 17
 
@@ -128,6 +133,7 @@ class ALHAuthProxy(object):
 			self.auth = auth
 
 	def start(self):
+		log.info("Starting HTTP server")
 		self.httpd = UnixSocketHTTPServer(self.path, HTTPRequestHandler)
 		self.httpd.proxy = self
 		self.httpd.serve_forever()
@@ -136,3 +142,60 @@ class ALHAuthProxy(object):
 		self.httpd.shutdown()
 		self.httpd.server_close()
 		del self.httpd
+
+def create_clusters(config):
+
+	clusters = {}
+
+	for uid, desc in config.items():
+		clusters[uid] = ALHWeb(desc['base_url'], desc['cluster_id'])
+
+	return clusters
+
+def main():
+	parser = optparse.OptionParser('%prog [options]',
+	        description="ALH authorization proxy for OMF")
+	parser.add_option('-c', '--config', metavar='FILE', dest='config', default="/etc/alh_auth_proxy.conf",
+	        help='Use FILE for configuration')
+
+	options, args = parser.parse_args()
+
+	config = {}
+	execfile(options.config, {}, config)
+
+	logging.basicConfig(
+			filename=config['log_file'],
+			level=logging.DEBUG,
+			format='%(asctime)s:%(levelname)s:%(name)s:%(message)s',
+			)
+	log.info("Forking into background")
+
+	clusters = create_clusters(config['clusters'])
+
+	proxy = ALHAuthProxy(config['socket'], clusters=clusters)
+
+	def stop(signal, frame):
+		log.info("Caught signal")
+		proxy.stop()
+
+	with daemon.DaemonContext(
+			signal_map={
+				signal.SIGINT: stop,
+				signal.SIGTERM: stop
+			},
+			files_preserve=[logging.root.handlers[0].stream],
+			pidfile=PIDLockFile(config['pid_file'])):
+
+		try:
+			thread = threading.Thread(target=proxy.start)
+			thread.start()
+
+			while thread.isAlive():
+				thread.join(timeout=1.)
+		except:
+			log.exception("Unhandled exception")
+
+		log.info("Stopped")
+
+if __name__ == "__main__":
+	main()
