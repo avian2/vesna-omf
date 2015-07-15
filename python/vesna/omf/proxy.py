@@ -123,8 +123,8 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 		log.info(format % args)
 
 class ALHAuthProxy(object):
-	def __init__(self, path, auth=None, clusters={}):
-		self.path = path
+	def __init__(self, socket_path, auth=None, clusters={}):
+		self.socket_path = socket_path
 		self.clusters = clusters
 
 		if auth is None:
@@ -134,7 +134,7 @@ class ALHAuthProxy(object):
 
 	def start(self):
 		log.info("Starting HTTP server")
-		self.httpd = UnixSocketHTTPServer(self.path, HTTPRequestHandler)
+		self.httpd = UnixSocketHTTPServer(self.socket_path, HTTPRequestHandler)
 		self.httpd.proxy = self
 		self.httpd.serve_forever()
 

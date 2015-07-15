@@ -25,7 +25,7 @@ class MockALH:
 class TestAuthProxyMockedALH(unittest.TestCase):
 
 	def setUp(self):
-		self.path = "/tmp/alh.sock"
+		self.socket_path = "/tmp/alh.sock"
 		self.a = None
 
 	def tearDown(self):
@@ -38,16 +38,17 @@ class TestAuthProxyMockedALH(unittest.TestCase):
 
 		clusters = {'test': self.alh}
 
-		self.a = ALHAuthProxy(self.path, clusters=clusters, **kwargs)
+		self.a = ALHAuthProxy(self.socket_path, clusters=clusters, **kwargs)
 		self.t = threading.Thread(target=self.a.start)
 		self.t.start()
 
-		while not os.path.exists(self.path):
+		while not os.path.exists(self.socket_path):
 			pass
 
 	def _get(self, path, params=None):
 		session = requests_unixsocket.Session()
-		return session.get('http+unix://%s/%s' % (self.path.replace('/', '%2F'), path), params=params)
+		url = 'http+unix://%s/%s' % (self.socket_path.replace('/', '%2F'), path)
+		return session.get(url, params=params)
 
 	def test_invalid_url(self):
 		self._start()
@@ -190,17 +191,17 @@ from vesna.omf import ALH
 
 class TestOMFALH(unittest.TestCase):
 	def setUp(self):
-		self.socket = "/tmp/alh.sock"
+		self.socket_path = "/tmp/alh.sock"
 
 		self.alh = MockALH()
 
 		clusters = {'test': self.alh}
 
-		self.a = ALHAuthProxy(self.socket, clusters=clusters)
+		self.a = ALHAuthProxy(self.socket_path, clusters=clusters)
 		self.t = threading.Thread(target=self.a.start)
 		self.t.start()
 
-		while not os.path.exists(self.socket):
+		while not os.path.exists(self.socket_path):
 			pass
 
 	def tearDown(self):
@@ -209,13 +210,13 @@ class TestOMFALH(unittest.TestCase):
 			self.t.join()
 
 	def test_get_request(self):
-		alh = ALH(cluster_uid='test', socket=self.socket)
+		alh = ALH(cluster_uid='test', socket_path=self.socket_path)
 		r = alh.get('hello')
 
 		self.assertEqual(r, 'get')
 
 	def test_post_request(self):
-		alh = ALH(cluster_uid='test', socket=self.socket)
+		alh = ALH(cluster_uid='test', socket_path=self.socket_path)
 		r = alh.post('hello', '1')
 
 		self.assertEqual(r, 'post')

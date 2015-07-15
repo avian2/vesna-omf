@@ -9,16 +9,16 @@ from vesna.omf.proxy import load_config
 log = logging.getLogger(__name__)
 
 class ALH(ALHProtocol):
-	def __init__(self, cluster_uid=None, socket=None):
+	def __init__(self, cluster_uid=None, socket_path=None):
 		self.cluster_uid = os.environ.get('CLUSTER_UID', cluster_uid)
 		if self.cluster_uid is None:
 			raise ALHException("CLUSTER_UID undefined. This script should be ran by "
 					"the OMF experiment controller")
 
-		if socket is None:
-			socket = load_config()['socket']
+		if socket_path is None:
+			socket_path = load_config()['socket']
 
-		self.base_url = 'http+unix://%s/communicator' % (urllib.quote(socket, safe=''),)
+		self.base_url = 'http+unix://%s/communicator' % (urllib.quote(socket_path, safe=''),)
 
 	def _send(self, params):
 		session = requests_unixsocket.Session()
