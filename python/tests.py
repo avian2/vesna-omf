@@ -186,5 +186,39 @@ class TestAuthProxyALHWeb(unittest.TestCase):
 		self.assertEqual(r.text, 'bar')
 		self.assertEqual(self.l[0], 1)
 
+from vesna.omf import ALH
+
+class TestOMFALH(unittest.TestCase):
+	def setUp(self):
+		self.socket = "/tmp/alh.sock"
+
+		self.alh = MockALH()
+
+		clusters = {'test': self.alh}
+
+		self.a = ALHAuthProxy(self.socket, clusters=clusters)
+		self.t = threading.Thread(target=self.a.start)
+		self.t.start()
+
+		while not os.path.exists(self.socket):
+			pass
+
+	def tearDown(self):
+		if self.a is not None:
+			self.a.stop()
+			self.t.join()
+
+	def test_get_request(self):
+		alh = ALH(cluster_uid='test', socket=self.socket)
+		r = alh.get('hello')
+
+		self.assertEqual(r, 'get')
+
+	def test_post_request(self):
+		alh = ALH(cluster_uid='test', socket=self.socket)
+		r = alh.post('hello', '1')
+
+		self.assertEqual(r, 'post')
+
 if __name__ == '__main__':
 	unittest.main()
