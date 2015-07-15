@@ -147,7 +147,7 @@ DEFAULT_CONFIG = "/etc/alh_auth_proxy.conf"
 
 def load_config(path=DEFAULT_CONFIG):
 	config = {}
-	execfile(options.config, {}, config)
+	execfile(path, {}, config)
 	return config
 
 def create_clusters(config):
