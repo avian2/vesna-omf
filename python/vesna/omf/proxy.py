@@ -143,6 +143,13 @@ class ALHAuthProxy(object):
 		self.httpd.server_close()
 		del self.httpd
 
+DEFAULT_CONFIG = "/etc/alh_auth_proxy.conf"
+
+def load_config(path=DEFAULT_CONFIG):
+	config = {}
+	execfile(options.config, {}, config)
+	return config
+
 def create_clusters(config):
 
 	clusters = {}
@@ -155,13 +162,12 @@ def create_clusters(config):
 def main():
 	parser = optparse.OptionParser('%prog [options]',
 	        description="ALH authorization proxy for OMF")
-	parser.add_option('-c', '--config', metavar='FILE', dest='config', default="/etc/alh_auth_proxy.conf",
+	parser.add_option('-c', '--config', metavar='FILE', dest='config', default=DEFAULT_CONFIG,
 	        help='Use FILE for configuration')
 
 	options, args = parser.parse_args()
 
-	config = {}
-	execfile(options.config, {}, config)
+	config = load_config(options.config)
 
 	logging.basicConfig(
 			filename=config['log_file'],
