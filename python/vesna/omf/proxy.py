@@ -1,6 +1,10 @@
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 import daemon
-from daemon.pidlockfile import PIDLockFile
+try:
+	from daemon.pidlockfile import PIDLockFile
+except ImportError:
+	from daemon.pidfile import PIDLockFile
+
 import logging
 import optparse
 import os
