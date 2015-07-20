@@ -147,7 +147,7 @@ class ALHAuthProxy(object):
 		self.httpd.server_close()
 		del self.httpd
 
-DEFAULT_CONFIG = "/etc/alh_auth_proxy.conf"
+DEFAULT_CONFIG = "/etc/vesna_alh_auth_proxy.conf"
 
 def load_config(path=DEFAULT_CONFIG):
 	config = {}
