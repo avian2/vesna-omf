@@ -84,7 +84,7 @@ useful in debugging problems.
 Install the proxy server that handles request authentication between the
 OMF/SFA and the VESNA ALH worlds.
 
-    # cd vesna-omf/python
+    # cd vesna-omf/vesna_alhauthproxy
     # pip install .
     # pip install vesna-spectrumsensor
     # cp -i initrc /etc/init.d/vesna_alh_auth_proxy
