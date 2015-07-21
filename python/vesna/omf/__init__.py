@@ -28,7 +28,7 @@ class ALH(ALHProtocol):
 		if resp.status_code != 200:
 			raise TerminalError(resp.text)
 
-		return resp.text
+		return resp.content
 
 	def _send_with_error(self, params):
 		# loop until communication channel is free and our request
