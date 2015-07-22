@@ -20,6 +20,10 @@ setup(name='vesna-alhauthproxy',
 	      ]
       },
 
+      data_files = [
+	      ('/etc/init.d', ['init-script']),
+      ],
+
       install_requires = [ 'vesna-alhtools', 'requests-unixsocket', 'python-daemon' ],
 
       test_suite = 'tests',
