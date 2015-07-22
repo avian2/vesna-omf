@@ -24,7 +24,7 @@ First install some Ubuntu packages that we will need later on. This also
 installs the RabbitMQ server which is used for communication between OMF
 components (it is available as `amqp://localhost` by default).
 
-    # apt-get install ruby-dev build-essential libssl-dev git rabbitmq-server python-pip
+    # apt-get install ruby-dev build-essential libssl-dev git rabbitmq-server python-pip python-numpy
 
 ### OMF Resource Controller
 
@@ -77,10 +77,7 @@ useful in debugging problems.
 Install the proxy server that handles request authentication between the
 OMF/SFA and the VESNA ALH worlds.
 
-    # cd vesna-omf/vesna_alhauthproxy
-    # pip install .
-    # pip install vesna-spectrumsensor
-    # cp -i initrc /etc/init.d/vesna_alh_auth_proxy
+    # pip install vesna-alhauthproxy
 
 Put the following configuration into `/etc/vesna_alh_auth_proxy.conf`. This
 maps OMF resources `lgt01` and `lgt02` to ALH cluster IDs 10001 and 10002.
