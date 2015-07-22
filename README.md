@@ -155,6 +155,14 @@ To test the OMF setup, the a simple experiment can be performed.
 This queries the coordinator node of the selected cluster (`lgt02`) for its firmware version (`Coordinator version 2.44`).
 
 
+## Further reading
+
+* [VESNA spectrum sensor](https://github.com/avian2/vesna-spectrum-sensor)
+* [VESNA ALH tools](https://github.com/avian2/vesna-alh-tools)
+* [VESNA](http://sensorlab.ijs.si/hardware.html)
+* [LOG-a-TEC](http://log-a-tec.eu/)
+
+
 ## License
 
 Copyright (C) 2015 SensorLab, Jozef Stefan Institute
