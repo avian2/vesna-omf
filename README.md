@@ -123,8 +123,9 @@ To install the OMF Experiment Controller:
 
 ## Running an experiment
 
-To test the OMF setup, the a simple experiment can be performed.
+To test the OMF setup, a simple experiment can be performed.
 
+    $ git clone https://github.com/avian2/vesna-omf.git
     $ cd vesna-omf/examples
     $ omf_ec oedl_hello.rb -- --cluster lgt02
     INFO	OML4R Client 2.10.6 [OMSPv4; Ruby 1.9.3] Copyright 2009-2014, NICTA
