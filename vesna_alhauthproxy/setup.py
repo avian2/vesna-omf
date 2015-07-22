@@ -26,5 +26,5 @@ setup(name='vesna-alhauthproxy',
 
       install_requires = [ 'vesna-alhtools', 'requests-unixsocket', 'python-daemon' ],
 
-      test_suite = 'tests',
+      test_suite = 'test',
 )
