@@ -31,15 +31,8 @@ components (it is available as `amqp://localhost` by default).
 Install the OMF Resource Controller (note that the `install_omf_rc` command
 overwrites any existing RC configuration).
 
-    # gem install omf_rc --no-ri --no-rdoc
+    # gem install omf_rc_logatec --no-ri --no-rdoc
     # install_omf_rc -i -c
-
-Install the Resource Proxies for accessing VESNA Log-a-tec-style testbeds.
-
-    $ git clone FIXME
-    $ cd vesna-omf/omf_rc_logatec
-    $ gem build omf_rc_logatec.gemspec
-    # gem install omf_rc_logatec-1.0.0.gem
 
 Put the following configuration into `/etc/omf_rc/config.yaml`. This registers
 two VESNA clusters with names  `lgt01` and `lgt02` with the OMF Resource
@@ -63,7 +56,7 @@ Controller.
 
 Start the resource controller.
 
-    $ start omf_rc
+    # start omf_rc
 
 To check that OMF Resource Controller works, you can query the properties of
 one of the clusters. Note that this does not check whether any other component
