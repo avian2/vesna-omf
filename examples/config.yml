@@ -1,0 +1,4 @@
+logging:
+  appenders:
+    stdout:
+      level: :info

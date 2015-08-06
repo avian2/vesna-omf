@@ -127,7 +127,7 @@ To test the OMF setup, a simple experiment can be performed.
 
     $ git clone https://github.com/avian2/vesna-omf.git
     $ cd vesna-omf/examples
-    $ omf_ec oedl_hello.rb -- --cluster lgt02
+    $ omf_ec -c config.yaml oedl_hello.rb -- --cluster lgt02
     INFO	OML4R Client 2.10.6 [OMSPv4; Ruby 1.9.3] Copyright 2009-2014, NICTA
     Warning: OML4R: Missing values for parameter :domain (--oml-domain, OML_DOMAIN)! to instrument, so it will run without instrumentation. (see --oml-help)
     15:30:50  INFO OmfEc::Runner: OMF Experiment Controller 6.2.2 - Start
