@@ -221,5 +221,49 @@ class TestOMFALH(unittest.TestCase):
 
 		self.assertEqual(r, 'post')
 
+from vesna.omf.proxy import StaticAuthenticator
+
+class MockStructPasswd: pass
+
+def mock_getpwnam(name):
+	assert name.startswith("user")
+
+	s = MockStructPasswd()
+	s.pw_uid = int(name[4:])
+	return s
+
+class TestStaticAuthenticator(unittest.TestCase):
+	def test_no_config(self):
+		clusters = {
+			"cluster1": {
+				"cluster_id": 1
+			},
+			"cluster2": {
+				"cluster_id": 2
+			},
+		}
+
+		a = StaticAuthenticator(clusters)
+		self.assertFalse(a.is_configured())
+
+	def test_with_config(self):
+		clusters = {
+			"cluster1": {
+				"cluster_id": 1,
+				"user": "user1"
+			},
+			"cluster2": {
+				"cluster_id": 2,
+				"user": "user2"
+			},
+		}
+
+		a = StaticAuthenticator(clusters, getpwnam=mock_getpwnam)
+		self.assertTrue(a.is_configured())
+
+		self.assertTrue(a.is_allowed("cluster1", 0, 1, 1))
+		self.assertFalse(a.is_allowed("cluster1", 0, 2, 1))
+		self.assertTrue(a.is_allowed("cluster2", 0, 2, 1))
+
 if __name__ == '__main__':
 	unittest.main()

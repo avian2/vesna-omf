@@ -8,6 +8,7 @@ except ImportError:
 import logging
 import optparse
 import os
+import pwd
 import signal
 import struct
 from SocketServer import TCPServer
@@ -27,6 +28,29 @@ class BaseAuthenticator(object):
 
 class NullAuthenticator(BaseAuthenticator):
 	pass
+
+class StaticAuthenticator(BaseAuthenticator):
+	def __init__(self, clusters, getpwnam=pwd.getpwnam):
+		self.cluster_uid_to_user_id = {}
+		for cluster_uid, config in clusters.items():
+			name = config.get('user')
+			if name is None:
+				continue
+
+			try:
+				user_id = getpwnam(name).pw_uid
+			except KeyError:
+				log.error("Unknown user '%s' in config for cluster '%s' - ignoring" % (
+						name, cluster_uid))
+			else:
+				self.cluster_uid_to_user_id[cluster_uid] = user_id
+
+	def is_configured(self):
+		return bool(self.cluster_uid_to_user_id)
+
+	def is_allowed(self, cluster_uid, pid, uid, gid):
+		allowed_uid = self.cluster_uid_to_user_id.get(cluster_uid)
+		return allowed_uid == uid
 
 class UnixSocketHTTPServer(TCPServer):
 	allow_reuse_address = 1
@@ -185,7 +209,12 @@ def main():
 
 	clusters = create_clusters(config['clusters'])
 
-	proxy = ALHAuthProxy(config['socket'], clusters=clusters)
+	auth = StaticAuthenticator(config['clusters'])
+	if not auth.is_configured():
+		log.warning("StaticAuthenticator not configured. Falling back to NullAuthenticator")
+		auth = NullAuthenticator()
+
+	proxy = ALHAuthProxy(config['socket'], auth=auth, clusters=clusters)
 
 	def stop(signal, frame):
 		log.info("Caught signal")
