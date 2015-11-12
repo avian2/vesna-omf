@@ -21,9 +21,12 @@ SO_PEERCRED = 17
 
 log = logging.getLogger(__name__)
 
-class NullAuthenticator(object):
+class BaseAuthenticator(object):
 	def is_allowed(self, cluster_uid, pid, uid, gid):
 		return True
+
+class NullAuthenticator(BaseAuthenticator):
+	pass
 
 class UnixSocketHTTPServer(TCPServer):
 	allow_reuse_address = 1
