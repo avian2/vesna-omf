@@ -50,7 +50,7 @@ class StaticAuthenticator(BaseAuthenticator):
 
 	def is_allowed(self, cluster_uid, pid, uid, gid):
 		allowed_uid = self.cluster_uid_to_user_id.get(cluster_uid)
-		return allowed_uid == uid
+		return allowed_uid == uid or uid == 0
 
 class UnixSocketHTTPServer(TCPServer):
 	allow_reuse_address = 1

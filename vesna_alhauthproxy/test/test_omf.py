@@ -265,5 +265,9 @@ class TestStaticAuthenticator(unittest.TestCase):
 		self.assertFalse(a.is_allowed("cluster1", 0, 2, 1))
 		self.assertTrue(a.is_allowed("cluster2", 0, 2, 1))
 
+		# always allow root
+		self.assertTrue(a.is_allowed("cluster1", 0, 0, 1))
+		self.assertTrue(a.is_allowed("cluster2", 0, 0, 1))
+
 if __name__ == '__main__':
 	unittest.main()
