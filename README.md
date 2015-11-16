@@ -90,11 +90,13 @@ maps OMF resources `lgt01` and `lgt02` to ALH cluster IDs 10001 and 10002.
     clusters = {
         "lgt01": {
             "base_url": "https://crn.log-a-tec.eu/communicator",
-            "cluster_id": 10001
+            "cluster_id": 10001,
+            "user": "userlgt01"
         },
         "lgt02": {
             "base_url": "https://crn.log-a-tec.eu/communicator",
-            "cluster_id": 10002
+            "cluster_id": 10002,
+            "user": "userlgt02"
         }
     }
 
