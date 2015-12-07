@@ -2,3 +2,5 @@ logging:
   appenders:
     stdout:
       level: :info
+    rolling_file:
+      log_dir: .
