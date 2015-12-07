@@ -31,26 +31,31 @@ class NullAuthenticator(BaseAuthenticator):
 
 class StaticAuthenticator(BaseAuthenticator):
 	def __init__(self, clusters, getpwnam=pwd.getpwnam):
-		self.cluster_uid_to_user_id = {}
+		self.cluster_uid_to_user_id_set = {}
 		for cluster_uid, config in clusters.items():
-			name = config.get('user')
-			if name is None:
+			names = config.get('user')
+			if names is None:
 				continue
+			if isinstance(names, str):
+				names = (names,)
 
-			try:
-				user_id = getpwnam(name).pw_uid
-			except KeyError:
-				log.error("Unknown user '%s' in config for cluster '%s' - ignoring" % (
-						name, cluster_uid))
-			else:
-				self.cluster_uid_to_user_id[cluster_uid] = user_id
+			self.cluster_uid_to_user_id_set[cluster_uid] = user_id_set = set()
+
+			for name in names:
+				try:
+					user_id = getpwnam(name).pw_uid
+				except KeyError:
+					log.error("Unknown user '%s' in config for cluster '%s' - ignoring" % (
+							name, cluster_uid))
+				else:
+					user_id_set.add(user_id)
 
 	def is_configured(self):
-		return bool(self.cluster_uid_to_user_id)
+		return bool(self.cluster_uid_to_user_id_set)
 
 	def is_allowed(self, cluster_uid, pid, uid, gid):
-		allowed_uid = self.cluster_uid_to_user_id.get(cluster_uid)
-		return allowed_uid == uid or uid == 0
+		allowed_uids = self.cluster_uid_to_user_id_set.get(cluster_uid, ())
+		return uid in allowed_uids or uid == 0
 
 class UnixSocketHTTPServer(TCPServer):
 	allow_reuse_address = 1

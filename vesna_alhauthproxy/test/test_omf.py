@@ -269,5 +269,24 @@ class TestStaticAuthenticator(unittest.TestCase):
 		self.assertTrue(a.is_allowed("cluster1", 0, 0, 1))
 		self.assertTrue(a.is_allowed("cluster2", 0, 0, 1))
 
+	def test_with_config_list(self):
+		clusters = {
+			"cluster1": {
+				"cluster_id": 1,
+				"user": [ "user1", "user3" ]
+			},
+			"cluster2": {
+				"cluster_id": 2,
+				"user": "user2"
+			},
+		}
+
+		a = StaticAuthenticator(clusters, getpwnam=mock_getpwnam)
+		self.assertTrue(a.is_configured())
+
+		self.assertTrue(a.is_allowed("cluster1", 0, 1, 1))
+		self.assertFalse(a.is_allowed("cluster1", 0, 2, 1))
+		self.assertTrue(a.is_allowed("cluster1", 0, 3, 1))
+
 if __name__ == '__main__':
 	unittest.main()
