@@ -9,6 +9,13 @@ from vesna.omf.proxy import load_config
 log = logging.getLogger(__name__)
 
 class ALH(ALHProtocol):
+	"""ALH protocol implementation for access through the OMF framework.
+
+	This class is typically used to access the coordinator when accessing
+	the tesbed through the OMF framework. No parameters are usually needed
+	for the constructor. The appropriate values are discovered
+	automatically through OMF.
+	"""
 	def __init__(self, cluster_uid=None, socket_path=None):
 		self.cluster_uid = os.environ.get('CLUSTER_UID', cluster_uid)
 		if self.cluster_uid is None:
