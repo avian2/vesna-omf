@@ -11,7 +11,7 @@ import os
 import pwd
 import signal
 import struct
-from SocketServer import TCPServer
+from SocketServer import ThreadingTCPServer
 from socket import AF_UNIX, SOL_SOCKET
 import sys
 import threading
@@ -57,12 +57,12 @@ class StaticAuthenticator(BaseAuthenticator):
 		allowed_uids = self.cluster_uid_to_user_id_set.get(cluster_uid, ())
 		return uid in allowed_uids or uid == 0
 
-class UnixSocketHTTPServer(TCPServer):
+class UnixSocketHTTPServer(ThreadingTCPServer):
 	allow_reuse_address = 1
 	address_family = AF_UNIX
 
 	def server_close(self):
-		TCPServer.server_close(self)
+		ThreadingTCPServer.server_close(self)
 		os.unlink(self.server_address)
 
 class HTTPRequestHandler(BaseHTTPRequestHandler):

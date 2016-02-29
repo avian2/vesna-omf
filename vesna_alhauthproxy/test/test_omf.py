@@ -10,7 +10,7 @@ from vesna.alh import ALHWeb
 
 logging.basicConfig(level=logging.WARNING)
 
-class MockALH:
+class MockALH(object):
 	def __init__(self):
 		self.requests = []
 
@@ -36,9 +36,10 @@ class TestAuthProxyMockedALH(unittest.TestCase):
 	def _start(self, **kwargs):
 		self.alh = MockALH()
 
-		clusters = {'test': self.alh}
+		if 'clusters' not in kwargs:
+			kwargs['clusters'] = clusters = {'test': self.alh}
 
-		self.a = ALHAuthProxy(self.socket_path, clusters=clusters, **kwargs)
+		self.a = ALHAuthProxy(self.socket_path, **kwargs)
 		self.t = threading.Thread(target=self.a.start)
 		self.t.start()
 
@@ -129,6 +130,106 @@ class TestAuthProxyMockedALH(unittest.TestCase):
 		self.assertEqual(r.status_code, 403)
 		self.assertEqual(self.alh.requests, [])
 		self.assertEqual(l[0], ('test', os.getpid(), os.getuid(), os.getgid()))
+
+	def test_blocking(self):
+		# if one cluster blocks, other clusters should still be able to
+		# serve requests
+
+		class BlockingALH(MockALH):
+			def __init__(self):
+				super(BlockingALH, self).__init__()
+				self.lock = threading.Lock()
+				self.lock.acquire()
+
+			def get(self, *args):
+				self.lock.acquire()
+				r = super(BlockingALH, self).get(*args)
+				self.lock.release()
+				return r
+
+		working_alh = MockALH()
+		blocking_alh = BlockingALH()
+
+		clusters = {
+			'working': working_alh,
+			'blocking': blocking_alh,
+		}
+
+		self._start(clusters=clusters)
+
+		def blocking_request():
+			r = self._get('communicator',
+					{'cluster_uid': 'blocking', 'method': 'get', 'resource': '/test'})
+			self.assertEqual(r.status_code, 200)
+
+		blocking_thread = threading.Thread(target=blocking_request)
+		blocking_thread.start()
+
+		r = self._get('communicator',
+				{'cluster_uid': 'working', 'method': 'get', 'resource': '/test'})
+		self.assertEqual(r.status_code, 200)
+
+		blocking_alh.lock.release()
+		blocking_thread.join()
+
+	def test_concurrent_request(self):
+		# currently we allow multiple concurrent requests to one
+		# cluster. It seems nothing should break by that. One request
+		# will get "communication in progress" error from the
+		# coordinator, but it feels like it's not our place to fix
+		# that.
+
+		class BlockingALH(MockALH):
+			def __init__(self):
+				super(BlockingALH, self).__init__()
+				self.lock = threading.Lock()
+				self.lock.acquire()
+				self.n = 0
+				self.maxn = 0
+
+			def get(self, *args):
+				self.n += 1
+				self.maxn = max(self.n, self.maxn)
+				if self.n == 1:
+					return self.get1(*args)
+				else:
+					return self.get2(*args)
+				self.n -= 1
+
+			def get1(self, *args):
+				self.lock.acquire()
+				r = super(BlockingALH, self).get(*args)
+				self.lock.release()
+				return r
+
+			def get2(self, *args):
+				return super(BlockingALH, self).get(*args)
+
+		alh = BlockingALH()
+
+		clusters = {
+			'test': alh,
+		}
+
+		self._start(clusters=clusters)
+
+		def blocking_request():
+			r = self._get('communicator',
+					{'cluster_uid': 'test', 'method': 'get', 'resource': '/test'})
+			self.assertEqual(r.status_code, 200)
+
+		t1 = threading.Thread(target=blocking_request)
+		t1.start()
+
+		t2 = threading.Thread(target=blocking_request)
+		t2.start()
+		t2.join()
+
+		alh.lock.release()
+
+		t1.join()
+
+		self.assertEqual(alh.maxn, 2)
 
 class TestAuthProxyALHWeb(unittest.TestCase):
 
